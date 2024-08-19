@@ -18,7 +18,7 @@ async def filter_media(update: Update, context: CallbackContext) -> None:
 
 def add_media_filter(application):
     media_filter = MessageHandler(
-        filters.PHOTO | filters.VIDEO | filters.AUDIO | filters.Document(), 
+        filters.ALL & (filters.PHOTO | filters.VIDEO | filters.AUDIO | filters.DOCUMENT),
         filter_media
     )
     application.add_handler(media_filter)
