@@ -7,7 +7,6 @@ from replies import reply_to_salam, reply_to_yabot, reply_to_bot, reply_to_name
 from reveal import reveal
 from pin import add_pin_handlers
 from filter import add_filters
-from media_filter import add_media_filter
 
 # إعدادات تسجيل الأحداث
 logging.basicConfig(
