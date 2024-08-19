@@ -63,7 +63,6 @@ if __name__ == '__main__':
     add_filters(application)
 
     # إضافة فلتر للوسائط من media_filter.py
-    add_media_filter(application)
 
     # بدء تشغيل البوت
     application.run_polling()
