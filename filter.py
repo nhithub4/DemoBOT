@@ -1,6 +1,6 @@
 import logging
 import re
-from telegram import Update, ChatMember
+from telegram import Update
 from telegram.ext import CallbackContext, MessageHandler, filters
 
 # إعدادات تسجيل الأحداث
@@ -58,3 +58,7 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
                 )
             except Exception as e:
                 logger.error(f"خطأ في حذف الرسالة: {e}")
+
+def add_filters(application) -> None:
+    # إضافة معالج الرسائل
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, filter_messages))
