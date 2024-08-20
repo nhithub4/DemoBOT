@@ -40,29 +40,39 @@ async def start(update: Update, context: CallbackContext) -> None:
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(welcome_message, reply_markup=reply_markup)
 
-# تابع تشغيل البوت
-if __name__ == '__main__':
+def run_bot():
     application = ApplicationBuilder().token(BOT_TOKEN).build()
 
     # إضافة معالجات الأوامر
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.Regex(r'^(طرد|حظر)$'), ban))  # معالج الطرد والحظر
-    application.add_handler(MessageHandler(filters.Regex(r'^(قيد)$'), restrict))  # معالج التقييد
+    application.add_handler(MessageHandler(filters.Regex(r'^(طرد|حظر)$'), ban))
+    application.add_handler(MessageHandler(filters.Regex(r'^(قيد)$'), restrict))
     application.add_handler(MessageHandler(filters.Regex(r'^(إلغاء القيد)$'), unrestrict))
-    # إضافة معالجات للردود من replies.py
     application.add_handler(MessageHandler(filters.Regex(r'السلام عليكم'), reply_to_salam))
     application.add_handler(MessageHandler(filters.Regex(r'يابوت'), reply_to_yabot))
     application.add_handler(MessageHandler(filters.Regex(r'بوت'), reply_to_bot))
     application.add_handler(MessageHandler(filters.Regex(r'لاتزودها'), reply_to_name))
-
-    # إضافة معالج للأمر /كشف
     application.add_handler(MessageHandler(filters.Regex(r'^(كشف)$'), reveal))
-
+    
     # إضافة معالجات لتثبيت الرسائل
     add_pin_handlers(application)
-
-    # إضافة فلتر الرسائل من filter.py
+    # إضافة فلتر الرسائل
     add_filters(application)
 
     # بدء تشغيل البوت
     application.run_polling()
+
+def run_flask():
+    flask_port = int(os.getenv("FLASK_PORT", 5000))
+    app.run(host='0.0.0.0', port=flask_port, use_reloader=False, debug=True)
+
+if __name__ == '__main__':
+    # تشغيل Flask و Telegram bot في عمليات منفصلة
+    flask_process = Process(target=run_flask)
+    bot_process = Process(target=run_bot)
+    
+    flask_process.start()
+    bot_process.start()
+    
+    flask_process.join()
+    bot_process.join()
