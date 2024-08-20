@@ -8,8 +8,8 @@ from info import BOT_TOKEN
 from commands import ban, restrict, unrestrict, unban, unknown
 from replies import reply_to_salam, reply_to_yabot, reply_to_bot, reply_to_name
 from reveal import reveal
-from pin import add_pin_handlers
 from filter import add_filters
+from pin import pin_message, pin_message_with_notification, pin_message_with_duration, add_pin_handlers
 
 # إعدادات تسجيل الأحداث
 logging.basicConfig(
