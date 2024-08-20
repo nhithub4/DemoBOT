@@ -7,5 +7,7 @@ def hello_world():
     return 'Hello, World!'
 
 if __name__ == '__main__':
-    # تشغيل الخادم على جميع العناوين (0.0.0.0) وعلى المنفذ 5040
-    app.run(host='0.0.0.0', port=5040)
+    # تشغيل الخادم على جميع العناوين (0.0.0.0) وعلى المنفذ المحدد من متغير البيئة PORT
+    import os
+    port = int(os.getenv("PORT", 5000))  # استخدم المنفذ 5000 كافتراضي إذا لم يتم تعيين PORT
+    app.run(host='0.0.0.0', port=port)
