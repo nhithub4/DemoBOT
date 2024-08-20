@@ -14,7 +14,7 @@ async def ban(update: Update, context: CallbackContext) -> None:
         await update.effective_chat.ban_member(user_id)
         await update.message.reply_text("تم طرد العضو بنجاح.")
     except Exception as e:
-        await update.message.reply_text(f"حدث خطأ: {str(e)}")
+        await update.message.reply_text(f"حدث خطأ أثناء طرد العضو: {str(e)}")
 
 # دالة لتقييد عضو
 async def restrict(update: Update, context: CallbackContext) -> None:
@@ -46,9 +46,9 @@ async def restrict(update: Update, context: CallbackContext) -> None:
         await update.effective_chat.restrict_member(user_id, permissions)
         await update.message.reply_text("تم تقييد العضو بنجاح.")
     except Exception as e:
-        await update.message.reply_text(f"حدث خطأ: {str(e)}")
+        await update.message.reply_text(f"حدث خطأ أثناء تقييد العضو: {str(e)}")
 
-# دالة لإلغاء حظر عضو
+# دالة لإلغاء تقييد عضو
 async def unrestrict(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     user_id = update.message.reply_to_message.from_user.id if update.message.reply_to_message else None
@@ -78,7 +78,22 @@ async def unrestrict(update: Update, context: CallbackContext) -> None:
         await update.effective_chat.restrict_member(user_id, permissions)
         await update.message.reply_text("تم إلغاء تقييد العضو بنجاح.")
     except Exception as e:
-        await update.message.reply_text(f"حدث خطأ: {str(e)}")
+        await update.message.reply_text(f"حدث خطأ أثناء إلغاء تقييد العضو: {str(e)}")
+
+# دالة لإلغاء حظر عضو
+async def unban(update: Update, context: CallbackContext) -> None:
+    chat_id = update.effective_chat.id
+    user_id = update.message.reply_to_message.from_user.id if update.message.reply_to_message else None
+
+    if user_id is None:
+        await update.message.reply_text("يرجى الرد على رسالة العضو الذي تريد إلغاء حظره أو تحديده باستخدام @username أو id.")
+        return
+
+    try:
+        await update.effective_chat.unban_member(user_id)
+        await update.message.reply_text("تم إلغاء حظر العضو بنجاح.")
+    except Exception as e:
+        await update.message.reply_text(f"حدث خطأ أثناء إلغاء حظر العضو: {str(e)}")
 
 # دالة للتعامل مع الأوامر غير المعروفة
 async def unknown(update: Update, context: CallbackContext) -> None:
