@@ -1,11 +1,10 @@
 from flask import Flask
-
 app = Flask(__name__)
 
 @app.route('/')
 def hello_world():
-    return 'Hello, World!'
+    return 'GreyMatters'
 
-if __name__ == '__main__':
-    # تشغيل الخادم على جميع العناوين (0.0.0.0) وعلى المنفذ 5040
-    app.run(host='0.0.0.0', port=5040)
+
+if __name__ == "__main__":
+    app.run()
