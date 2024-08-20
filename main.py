@@ -1,4 +1,6 @@
+import os
 import logging
+from app import app  # استيراد تطبيق Flask من ملف app.py
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, CallbackContext
 from info import BOT_TOKEN
@@ -16,7 +18,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-# أمر الترحيب عند استخدام /start
+# تعريف البوت
 async def start(update: Update, context: CallbackContext) -> None:
     welcome_message = (
         "مرحبًا، أنا بوت متطور مصمم لإدارة مجموعات التليجرام.\n\n"
@@ -38,7 +40,7 @@ async def start(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text(welcome_message, reply_markup=reply_markup)
 
 # تابع تشغيل البوت
-if __name__ == '__main__':
+async def run_bot():
     application = ApplicationBuilder().token(BOT_TOKEN).build()
 
     # إضافة معالجات الأوامر
@@ -62,7 +64,15 @@ if __name__ == '__main__':
     # إضافة فلتر الرسائل من filter.py
     add_filters(application)
 
-    # إضافة فلتر للوسائط من media_filter.py
-
     # بدء تشغيل البوت
-    application.run_polling()
+    await application.run_polling()
+
+if __name__ == '__main__':
+    import asyncio
+
+    # تشغيل الخادم Flask في سيرفر منفصل
+    flask_port = int(os.getenv("FLASK_PORT", 5000))
+    app.run(host='0.0.0.0', port=flask_port, use_reloader=False, debug=True)
+
+    # تشغيل البوت
+    asyncio.run(run_bot())
