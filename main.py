@@ -1,5 +1,6 @@
 import os
 import logging
+from multiprocessing import Process
 from app import app  # استيراد تطبيق Flask من ملف app.py
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, CallbackContext
@@ -67,12 +68,17 @@ async def run_bot():
     # بدء تشغيل البوت
     await application.run_polling()
 
-if __name__ == '__main__':
-    import asyncio
-
-    # تشغيل الخادم Flask في سيرفر منفصل
+def run_flask():
     flask_port = int(os.getenv("FLASK_PORT", 5000))
     app.run(host='0.0.0.0', port=flask_port, use_reloader=False, debug=True)
 
+if __name__ == '__main__':
+    from multiprocessing import Process
+
+    # تشغيل Flask والبوت في عمليات منفصلة
+    flask_process = Process(target=run_flask)
+    flask_process.start()
+
     # تشغيل البوت
+    import asyncio
     asyncio.run(run_bot())
