@@ -53,6 +53,8 @@ def run_bot():
     application.add_handler(MessageHandler(filters.Regex(r'بوت'), reply_to_bot))
     application.add_handler(MessageHandler(filters.Regex(r'لاتزودها'), reply_to_name))
     application.add_handler(MessageHandler(filters.Regex(r'^(كشف)$'), reveal))
+    application.add_handler(CommandHandler("إلغاء الحظر", unban))
+
     
     # إضافة معالجات لتثبيت الرسائل
     add_pin_handlers(application)
