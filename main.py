@@ -5,7 +5,7 @@ from app import app  # استيراد تطبيق Flask من ملف app.py
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, CallbackContext
 from info import BOT_TOKEN
-from commands import ban, restrict, unrestrict
+from commands import ban, restrict, unrestrict, unban, unknown
 from replies import reply_to_salam, reply_to_yabot, reply_to_bot, reply_to_name
 from reveal import reveal
 from pin import add_pin_handlers
