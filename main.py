@@ -19,7 +19,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-# تعريف البوت
+# أمر الترحيب عند استخدام /start
 async def start(update: Update, context: CallbackContext) -> None:
     welcome_message = (
         "مرحبًا، أنا بوت متطور مصمم لإدارة مجموعات التليجرام.\n\n"
@@ -41,15 +41,14 @@ async def start(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text(welcome_message, reply_markup=reply_markup)
 
 # تابع تشغيل البوت
-async def run_bot():
+if __name__ == '__main__':
     application = ApplicationBuilder().token(BOT_TOKEN).build()
 
     # إضافة معالجات الأوامر
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.Regex(r'^(طرد|حظر)$'), ban))
-    application.add_handler(MessageHandler(filters.Regex(r'^(قيد)$'), restrict))
+    application.add_handler(MessageHandler(filters.Regex(r'^(طرد|حظر)$'), ban))  # معالج الطرد والحظر
+    application.add_handler(MessageHandler(filters.Regex(r'^(قيد)$'), restrict))  # معالج التقييد
     application.add_handler(MessageHandler(filters.Regex(r'^(إلغاء القيد)$'), unrestrict))
-    
     # إضافة معالجات للردود من replies.py
     application.add_handler(MessageHandler(filters.Regex(r'السلام عليكم'), reply_to_salam))
     application.add_handler(MessageHandler(filters.Regex(r'يابوت'), reply_to_yabot))
@@ -66,19 +65,4 @@ async def run_bot():
     add_filters(application)
 
     # بدء تشغيل البوت
-    await application.run_polling()
-
-def run_flask():
-    flask_port = int(os.getenv("FLASK_PORT", 5000))
-    app.run(host='0.0.0.0', port=flask_port, use_reloader=False, debug=True)
-
-if __name__ == '__main__':
-    from multiprocessing import Process
-
-    # تشغيل Flask والبوت في عمليات منفصلة
-    flask_process = Process(target=run_flask)
-    flask_process.start()
-
-    # تشغيل البوت
-    import asyncio
-    asyncio.run(run_bot())
+    application.run_polling()
