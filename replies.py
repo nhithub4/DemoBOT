@@ -2,12 +2,6 @@
 from telegram import Update
 from telegram.ext import CallbackContext
 
-# تابع للرد على "السلام عليكم"
-async def reply_to_salam(update: Update, context: CallbackContext) -> None:
-    message_text = update.message.text.lower()
-    if 'السلام عليكم' in message_text:
-        await update.message.reply_text("وعليكم السلام")
-
 # تابع للرد على "يابوت"
 async def reply_to_yabot(update: Update, context: CallbackContext) -> None:
     message_text = update.message.text.lower()
