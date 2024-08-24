@@ -1,6 +1,6 @@
+# This filter.py
 import logging
 import re
-import unicodedata
 from telegram import Update, ChatMember
 from telegram.ext import CallbackContext, MessageHandler, filters
 
@@ -24,19 +24,15 @@ FORBIDDEN_WORDS = [
     "عروض خاصة", "عروض ترويجية", "بحث عمل", "وظيفة شاغرة", "فرصة عمل", "إعلانات توظيف",
     "تقديم طلب", "استفسار عن", "معلومات حول", "بدون إذن",
     "اسقاط", "سكليف", "اجازة", "تطبيق صحتي", "كرت تشغيل",
-    "خطابه", "الخطــابه", "whatsapp.com", "سكليف", "اجازة مرضية", "عذر طبي",
-    "تطبيق صحتي", "تواصل وتس"
+    "خطابه", "الخطــابه", "whatsapp.com" 
 ]
 
 def normalize_arabic_text(text):
     # الخطوة 1: إزالة الأحرف غير الضرورية وتطبيع المسافات
-    text = re.sub(r'[ــ*؟]', '', text)  # إزالة التمديد، النجوم، وعلامات الاستفهام
+    text = re.sub(r'[ــ*]', '', text)  # إزالة الأحرف غير الضرورية مثل التمديد أو النجوم
     text = re.sub(r'\s+', ' ', text).strip()  # إزالة المسافات الزائدة
 
-    # الخطوة 2: إزالة التشكيل
-    text = ''.join(c for c in unicodedata.normalize('NFD', text) if unicodedata.category(c) != 'Mn')
-
-    # الخطوة 3: استبدال 'ة' بـ 'ه' ومعالجة تطبيع "ال"
+    # الخطوة 2: استبدال 'ة' بـ 'ه' ومعالجة تطبيع "ال"
     normalization_map = {
         'ة': 'ه',  # استبدال 'ة' بـ 'ه'
         'ال': '',  # إزالة بادئة "ال"
@@ -44,13 +40,13 @@ def normalize_arabic_text(text):
     text = ''.join(normalization_map.get(char, char) for char in text)
     text = re.sub(r'\bال', '', text)  # إزالة بادئة "ال" في بداية الكلمات
 
-    # الخطوة 4: تطبيع الأحرف المكررة
+    # الخطوة 3: تطبيع الأحرف المكررة
     text = re.sub(r'(.)\1+', r'\1', text)  # تقليص الأحرف المكررة إلى حرف واحد
 
-    # الخطوة 5: تطبيع اختلافات التحية
+    # الخطوة 4: تطبيع اختلافات التحية
     text = re.sub(r'س+ل+ا+م+م* ع+ل+ي+ك+م*', 'السلام عليكم', text)
 
-    # الخطوة 6: توحيد الأرقام بإزالة المسافات
+    # الخطوة 5: توحيد الأرقام بإزالة المسافات
     text = re.sub(r'(\d)\s+(\d)', r'\1\2', text)  # إزالة المسافات بين الأرقام
 
     return text
@@ -64,14 +60,22 @@ def contains_forbidden_content(text):
 
     # التحقق من وجود كلمات محظورة
     for word in normalized_forbidden_words:
-        if re.search(rf'\b{re.escape(word)}\b', normalized_text, re.IGNORECASE):
+        if re.search(rf'\b{re.escape(word)}\b', normalized_text):
             return True
+
+    # التحقق من وجود كلمات "تكاليف" و"برزنتيشن" في نفس الجملة
+    if re.search(r'\bتكاليف\b.*\bبرزنتيشن\b|\bبرزنتيشن\b.*\bتكاليف\b', normalized_text):
+        return True
+
+    # التحقق من وجود كلمات "مشروع" و"تكاليف" في نفس الجملة
+    if re.search(r'\bمشروع\b.*\bتكاليف\b|\bتكاليف\b.*\bمشروع\b', normalized_text):
+        return True
 
     # التحقق من وجود روابط، أرقام هواتف، أو إشارات
     if re.search(r'http[s]?://|www\.', normalized_text):  # التحقق من وجود روابط
         return True
-    if re.search(r'\+?\d{9,}', normalized_text):  # التحقق من وجود أرقام هواتف
-        return True
+    #if re.search(r'\+?\d{9,}', normalized_text):  # التحقق من وجود أرقام هواتف
+       # return True
     if 't.me/' in normalized_text:  # التحقق من روابط تليجرام
         return True
     if re.search(r'@\w+', normalized_text):  # التحقق من وجود إشارات
