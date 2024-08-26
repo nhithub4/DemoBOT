@@ -82,6 +82,10 @@ def contains_forbidden_content(text):
     if re.search(r'\bاجازات\b.*\bمرضية\b|\bمرضية\b.*\bاجازات\b', normalized_text):
         return True
 
+    # التحقق من أرقام هواتف تبدأ بـ +967 أو 967
+    if re.search(r'\b(\+?967\d{0,9})\b', normalized_text):
+        return True
+
     # التحقق من وجود روابط، أرقام هواتف، أو إشارات
     if re.search(r'http[s]?://|www\.', normalized_text):  # التحقق من وجود روابط
         return True
