@@ -70,17 +70,6 @@ def contains_forbidden_content(text):
     # التحقق من وجود كلمات "مشروع" و"تكاليف" في نفس الجملة
     if re.search(r'\bمشروع\b.*\bتكاليف\b|\bتكاليف\b.*\bمشروع\b', normalized_text):
         return True
-    
-    # التحقق من وجود كلمات "اسايمنت" و"اختبارات" في نفس الجملة
-    if re.search(r'\bاسايمنت\b.*\bاختبارات\b|\bاختبارات\b.*\bاسايمنت\b', normalized_text):
-        return True
-    # التحقق من وجود كلمات "بروجكت" و"اختبارات" في نفس الجملة
-    if re.search(r'\bبروجكت\b.*\bاختبارات\b|\bاختبارات\b.*\bبروجكت\b', normalized_text):
-        return True
-    
-        # التحقق من وجود كلمات "اجازات" و"مرضية" في نفس الجملة
-    if re.search(r'\bاجازات\b.*\bمرضية\b|\bمرضية\b.*\bاجازات\b', normalized_text):
-        return True
 
     # التحقق من أرقام هواتف تبدأ بـ +967 أو 967
     if re.search(r'\b(\+?967\d{0,9})\b', normalized_text):
