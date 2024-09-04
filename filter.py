@@ -24,7 +24,7 @@ FORBIDDEN_WORDS = [
     "عروض خاصة", "خدمات طلابية", "عروض ترويجية", "بحث عمل", "وظيفة شاغرة", "فرصة عمل", "إعلانات توظيف",
     "تقديم طلب", "استفسار عن", "معلومات حول", "بدون إذن",
     "اسقاط", "سكليف", "اجازة", "تطبيق صحتي", "كرت تشغيل",
-    "خطابه", "الخطــابه", "whatsapp.com", "+967", "967", "قروض بن التنمية" ,"بنك التنمية" ,"سنرد" ,"وسنرد",
+    "خطابه", "الخطــابه", "whatsapp.com", "+967", "967", "قروض بن التنمية" ,"بنك التنمية" ,"سنرد" ,"وسنرد", "الخدمة موثقه", "الخدمه موثوقه",
 ]
 
 def normalize_arabic_text(text):
@@ -63,43 +63,25 @@ def contains_forbidden_content(text):
         if re.search(rf'\b{re.escape(word)}\b', normalized_text):
             return True
 
-    # التحقق من وجود كلمات "تكاليف" و"برزنتيشن" في نفس الجملة
+    # التحقق من وجود كلمات معينة في نفس الجملة
     if re.search(r'\bتكاليف\b.*\bبرزنتيشن\b|\bبرزنتيشن\b.*\bتكاليف\b', normalized_text):
         return True
-        
-    # التحقق من وجود كلمات "عروض" و"مضمون" في نفس الجملة
     if re.search(r'\bعروض\b.*\bمضمون\b|\bمضمون\b.*\bعروض\b', normalized_text):
         return True
-
-    # التحقق من وجود كلمات "بوربوينت" و"واجبات" في نفس الجملة
     if re.search(r'\bبوربوينت\b.*\bواجبات\b|\bواجبات\b.*\bبوربوينت\b', normalized_text):
         return True
-
-    # التحقق من وجود كلمات "باوربوينت" و"واجبات" في نفس الجملة
     if re.search(r'\bباوربوينت\b.*\bواجبات\b|\bواجبات\b.*\bباوربوينت\b', normalized_text):
         return True
-    
-    # التحقق من وجود كلمات "بوربوينت" و"مشاريع" في نفس الجملة
     if re.search(r'\bبوربوينت\b.*\bمشاريع\b|\bمشاريع\b.*\bبوربوينت\b', normalized_text):
         return True
-
-    # التحقق من وجود كلمات "باوربوينت" و"مشاريع" في نفس الجملة
     if re.search(r'\bباوربوينت\b.*\bمشاريع\b|\bمشاريع\b.*\bباوربوينت\b', normalized_text):
         return True
-
-    # التحقق من وجود كلمات "حل" و"خرائط مفاهيم" في نفس الجملة
     if re.search(r'\bحل\b.*\bخرائط مفاهيم\b|\bخرائط مفاهيم\b.*\bحل\b', normalized_text):
         return True
-
-    # التحقق من وجود كلمات "مشروع" و"تكاليف" في نفس الجملة
     if re.search(r'\bمشروع\b.*\bتكاليف\b|\bتكاليف\b.*\bمشروع\b', normalized_text):
         return True
-
-    # التحقق من وجود كلمات "يحل" و"واجبات" في نفس الجملة
     if re.search(r'\bيحل\b.*\bواجبات\b|\bواجبات\b.*\bيحل\b', normalized_text):
         return True
-
-    # التحقق من وجود كلمات "حل" و"مضمون" في نفس الجملة
     if re.search(r'\bحل\b.*\bمضمون\b|\bمضمون\b.*\bحل\b', normalized_text):
         return True
 
@@ -110,15 +92,11 @@ def contains_forbidden_content(text):
     # التحقق من وجود روابط، أرقام هواتف، أو إشارات
     if re.search(r'http[s]?://|www\.', normalized_text):  # التحقق من وجود روابط
         return True
-    # if re.search(r'\+?\d{9,}', normalized_text):  # التحقق من وجود أرقام هواتف
-    #     return True
     if 't.me/' in normalized_text:  # التحقق من روابط تليجرام
         return True
     if re.search(r'@\w+', normalized_text):  # التحقق من وجود إشارات
         return True
-
-    # التحقق من وجود روابط "wa.me"
-    if re.search(r'wa\.me/\d+', normalized_text):
+    if re.search(r'wa\.me/\d+', normalized_text):  # التحقق من روابط "wa.me"
         return True
 
     return False
@@ -127,9 +105,12 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
     user = update.message.from_user
     chat = update.message.chat
 
-    # تحقق مما إذا كانت الرسالة قد أُرسلت باسم المجموعة أو القناة
+    # تحقق من نوع الدردشة
+    if chat.type not in ['group', 'supergroup', 'channel']:
+        return
+
     if chat.type in ['group', 'supergroup', 'channel']:
-        if user.is_bot:  # تحقق مما إذا كان المرسل هو بوت
+        if user.is_bot:
             return
 
     # الحصول على حالة العضو في الدردشة
@@ -140,7 +121,6 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
         return
 
     if chat_member.status in [ChatMember.ADMINISTRATOR, ChatMember.OWNER]:
-        # المستخدم هو مسؤول أو مالك، يسمح بالرسالة
         return
 
     message_text = update.message.text
@@ -151,6 +131,38 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
         except Exception as e:
             logger.error(f"Error deleting message: {e}")
 
-# وظيفة لإضافة معالج الرسائل
+async def filter_edited_messages(update: Update, context: CallbackContext) -> None:
+    if update.edited_message:
+        edited_message_text = update.edited_message.text
+        user = update.edited_message.from_user
+        chat = update.edited_message.chat
+
+        # تحقق من نوع الدردشة
+        if chat.type not in ['group', 'supergroup', 'channel']:
+            return
+
+        if chat.type in ['group', 'supergroup', 'channel']:
+            if user.is_bot:
+                return
+
+        # الحصول على حالة العضو في الدردشة
+        try:
+            chat_member = await context.bot.get_chat_member(chat.id, user.id)
+        except Exception as e:
+            logger.error(f"Error fetching chat member: {e}")
+            return
+
+        if chat_member.status in [ChatMember.ADMINISTRATOR, ChatMember.OWNER]:
+            return
+
+        if contains_forbidden_content(edited_message_text):
+            try:
+                await update.edited_message.delete()
+                await update.edited_message.reply_text("تم حذف الرسالة لاحتوائها على محتوى غير مسموح به.")
+            except Exception as e:
+                logger.error(f"Error deleting edited message: {e}")
+
+# وظيفة لإضافة معالجات الرسائل
 def add_filters(application):
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, filter_messages))
+    application.add_handler(MessageHandler(filters.EDITED_MESSAGE, filter_edited_messages))
