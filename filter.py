@@ -1,3 +1,4 @@
+# This is filter.py
 import logging
 import re
 from telegram import Update, ChatMember
@@ -5,7 +6,7 @@ from telegram.ext import CallbackContext, MessageHandler, filters
 
 # إعدادات تسجيل الأحداث
 logging.basicConfig(
-    format='%(asctime)s - %(name=s) - %(levelname)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
@@ -23,58 +24,102 @@ FORBIDDEN_WORDS = [
     "عروض خاصة", "خدمات طلابية", "عروض ترويجية", "بحث عمل", "وظيفة شاغرة", "فرصة عمل", "إعلانات توظيف",
     "تقديم طلب", "استفسار عن", "معلومات حول", "بدون إذن",
     "اسقاط", "سكليف", "اجازة", "تطبيق صحتي", "كرت تشغيل",
-    "خطابه", "الخطــابه", "whatsapp.com", "+967", "967", "قروض بن التنمية" ,"بنك التنمية" ,"سنرد" ,"وسنرد", "الخدمة موثقه", "الخدمه موثوقه",
+    "خطابه", "الخطــابه", "whatsapp.com", "+967", "967", "قروض بن التنمية" ,"بنك التنمية" ,"سنرد" ,"وسنرد",
+    "الخدمه موثوقه", "الخدمه موثقه",
 ]
 
 def normalize_arabic_text(text):
+    # الخطوة 1: إزالة الأحرف غير الضرورية وتطبيع المسافات
     text = re.sub(r'[ــ*]', '', text)  # إزالة الأحرف غير الضرورية مثل التمديد أو النجوم
     text = re.sub(r'\s+', ' ', text).strip()  # إزالة المسافات الزائدة
+
+    # الخطوة 2: استبدال 'ة' بـ 'ه' ومعالجة تطبيع "ال"
     normalization_map = {
         'ة': 'ه',  # استبدال 'ة' بـ 'ه'
         'ال': '',  # إزالة بادئة "ال"
     }
     text = ''.join(normalization_map.get(char, char) for char in text)
     text = re.sub(r'\bال', '', text)  # إزالة بادئة "ال" في بداية الكلمات
+
+    # الخطوة 3: تطبيع الأحرف المكررة
     text = re.sub(r'(.)\1+', r'\1', text)  # تقليص الأحرف المكررة إلى حرف واحد
+
+    # الخطوة 4: تطبيع اختلافات التحية
     text = re.sub(r'س+ل+ا+م+م* ع+ل+ي+ك+م*', 'السلام عليكم', text)
+
+    # الخطوة 5: توحيد الأرقام بإزالة المسافات
     text = re.sub(r'(\d)\s+(\d)', r'\1\2', text)  # إزالة المسافات بين الأرقام
 
     return text
 
 def contains_forbidden_content(text):
+    # تطبيع النص
     normalized_text = normalize_arabic_text(text)
+
+    # تطبيع الكلمات المحظورة
     normalized_forbidden_words = [normalize_arabic_text(word) for word in FORBIDDEN_WORDS]
 
+    # التحقق من وجود كلمات محظورة
     for word in normalized_forbidden_words:
         if re.search(rf'\b{re.escape(word)}\b', normalized_text):
             return True
 
-    patterns = [
-        r'\bتكاليف\b.*\bبرزنتيشن\b|\bبرزنتيشن\b.*\bتكاليف\b',
-        r'\bعروض\b.*\بمضمون\b|\بمضمون\b.*\بض\b',
-        r'\ببوربوينت\b.*\بواجبات\b|\بواجبات\b.*\ببوربوينت\b',
-        r'\بباوربوينت\b.*\بواجبات\b|\بواجبات\b.*\بباوربوينت\b',
-        r'\ببوربوينت\b.*\بمشاريع\b|\بمشاريع\b.*\ببوربوينت\b',
-        r'\بباوربوينت\b.*\بمشاريع\b|\بمشاريع\b.*\بباوربوينت\b',
-        r'\بحل\b.*\بخرائط مفاهيم\b|\بخرائط مفاهيم\b.*\بحل\b',
-        r'\بمشروع\b.*\بموين\b|\بموين\b.*\بمق',
-        r'\بمشروع\b.*\بموين\b|\بموين\b.*\بمق',
-        r'\بيحل\b.*\بواجبات\b|\بواجبات\b.*\بمي',
-        r'\بحل\b.*\بمضمون\b|\بمضمون\b.*\بمي',
-        r'\ب(\+?967\d{0,9})\b'
-    ]
+    # التحقق من وجود كلمات "تكاليف" و"برزنتيشن" في نفس الجملة
+    if re.search(r'\bتكاليف\b.*\bبرزنتيشن\b|\bبرزنتيشن\b.*\bتكاليف\b', normalized_text):
+        return True
+        
+    # التحقق من وجود كلمات "عروض" و"مضمون" في نفس الجملة
+    if re.search(r'\bعروض\b.*\bمضمون\b|\bمضمون\b.*\bعروض\b', normalized_text):
+        return True
 
-    for pattern in patterns:
-        if re.search(pattern, normalized_text):
-            return True
+    # التحقق من وجود كلمات "بوربوينت" و"واجبات" في نفس الجملة
+    if re.search(r'\bبوربوينت\b.*\bواجبات\b|\bواجبات\b.*\bبوربوينت\b', normalized_text):
+        return True
 
-    if re.search(r'http[s]?://|www\.', normalized_text):
+    # التحقق من وجود كلمات "باوربوينت" و"واجبات" في نفس الجملة
+    if re.search(r'\bباوربوينت\b.*\bواجبات\b|\bواجبات\b.*\bباوربوينت\b', normalized_text):
         return True
-    if 't.me/' in normalized_text:
+    
+    # التحقق من وجود كلمات "بوربوينت" و"مشاريع" في نفس الجملة
+    if re.search(r'\bبوربوينت\b.*\bمشاريع\b|\bمشاريع\b.*\bبوربوينت\b', normalized_text):
         return True
-    if re.search(r'@\w+', normalized_text):
+
+    # التحقق من وجود كلمات "باوربوينت" و"مشاريع" في نفس الجملة
+    if re.search(r'\bباوربوينت\b.*\بمشاريع\b|\بمشاريع\b.*\ببوربوينت\b', normalized_text):
         return True
-    if re.search(r'wa\.me/\d+', normalized_text):
+
+    # التحقق من وجود كلمات "حل" و"خرائط مفاهيم" في نفس الجملة
+    if re.search(r'\بحل\b.*\بخرائط مفاهيم\b|\بخرائط مفاهيم\b.*\بحل\b', normalized_text):
+        return True
+
+    # التحقق من وجود كلمات "مشروع" و"تكاليف" في نفس الجملة
+    if re.search(r'\بمشروع\b.*\بتكاليف\b|\بمشروع\b.*\بتكاليف\b', normalized_text):
+        return True
+
+    # التحقق من وجود كلمات "يحل" و"واجبات" في نفس الجملة
+    if re.search(r'\بواجبات\b.*\بيحل\b|\بيحل\b.*\بواجبات\b', normalized_text):
+        return True
+
+    # التحقق من وجود كلمات "حل" و"مضمون" في نفس الجملة
+    if re.search(r'\بحل\b.*\بمضمون\b|\بمضمون\b.*\بحل\b', normalized_text):
+        return True
+
+    # التحقق من أرقام هواتف تبدأ بـ +967 أو 967
+    if re.search(r'\ب(\+?967\d{0,9})\ب', normalized_text):
+        return True
+
+    # التحقق من وجود روابط، أرقام هواتف، أو إشارات
+    if re.search(r'http[s]?://|www\.', normalized_text):  # التحقق من وجود روابط
+        return True
+    # if re.search(r'\+?\d{9,}', normalized_text):  # التحقق من وجود أرقام هواتف
+    #     return True
+    if 't.me/' in normalized_text:  # التحقق من روابط تليجرام
+        return True
+    if re.search(r'@\w+', normalized_text):  # التحقق من وجود إشارات
+        return True
+
+    # التحقق من وجود روابط "wa.me"
+    if re.search(r'wa\.me/\د+', normalized_text):
         return True
 
     return False
@@ -83,9 +128,12 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
     user = update.message.from_user
     chat = update.message.chat
 
-    if chat.type not in ['group', 'supergroup', 'channel'] or user.is_bot:
-        return
+    # تحقق مما إذا كانت الرسالة قد أُرسلت باسم المجموعة أو القناة
+    if chat.type in ['group', 'supergroup', 'channel']:
+        if user.is_bot:  # تحقق مما إذا كان المرسل هو بوت
+            return
 
+    # الحصول على حالة العضو في الدردشة
     try:
         chat_member = await context.bot.get_chat_member(chat.id, user.id)
     except Exception as e:
@@ -93,6 +141,7 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
         return
 
     if chat_member.status in [ChatMember.ADMINISTRATOR, ChatMember.OWNER]:
+        # المستخدم هو مسؤول أو مالك، يسمح بالرسالة
         return
 
     message_text = update.message.text
@@ -103,31 +152,6 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
         except Exception as e:
             logger.error(f"Error deleting message: {e}")
 
-async def filter_edited_messages(update: Update, context: CallbackContext) -> None:
-    if update.edited_message:
-        edited_message_text = update.edited_message.text
-        user = update.edited_message.from_user
-        chat = update.edited_message.chat
-
-        if chat.type not in ['group', 'supergroup', 'channel'] or user.is_bot:
-            return
-
-        try:
-            chat_member = await context.bot.get_chat_member(chat.id, user.id)
-        except Exception as e:
-            logger.error(f"Error fetching chat member: {e}")
-            return
-
-        if chat_member.status in [ChatMember.ADMINISTRATOR, ChatMember.OWNER]:
-            return
-
-        if contains_forbidden_content(edited_message_text):
-            try:
-                await update.edited_message.delete()
-                await update.edited_message.reply_text("تم حذف الرسالة لاحتوائها على محتوى غير مسموح به.")
-            except Exception as e:
-                logger.error(f"Error deleting edited message: {e}")
-
+# وظيفة لإضافة معالج الرسائل
 def add_filters(application):
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, filter_messages))
-    application.add_handler(MessageHandler(filters.EDITED_MESSAGE, filter_edited_messages))
