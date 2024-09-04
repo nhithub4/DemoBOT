@@ -1,7 +1,7 @@
 import logging
 import re
 from telegram import Update, ChatMember
-from telegram.ext import CallbackContext, MessageHandler, filters
+from telegram.ext import CallbackContext
 
 # إعدادات تسجيل الأحداث
 logging.basicConfig(
@@ -23,7 +23,7 @@ FORBIDDEN_WORDS = [
     "عروض خاصة", "خدمات طلابية", "عروض ترويجية", "بحث عمل", "وظيفة شاغرة", "فرصة عمل", "إعلانات توظيف",
     "تقديم طلب", "استفسار عن", "معلومات حول", "بدون إذن",
     "اسقاط", "سكليف", "اجازة", "تطبيق صحتي", "كرت تشغيل",
-    "خطابه", "الخطــابه" ,"whatsapp.com" ,"+967" ,"967" ,"قروض بن التنمية", "بنك التنمية", "سنرد", "وسنرد"
+    "خطابه", "الخطــابه", "whatsapp.com", "+967", "967", "قروض بن التنمية" ,"بنك التنمية" ,"سنرد" ,"وسنرد",
 ]
 
 def normalize_arabic_text(text):
@@ -67,43 +67,43 @@ def contains_forbidden_content(text):
         return True
         
     # التحقق من وجود كلمات "عروض" و"مضمون" في نفس الجملة
-    if re.search(r'\بمضمون\b.*\بعروض\b|\بعروض\b.*\بمضمون\b', normalized_text):
+    if re.search(r'\bمضمون\b.*\bعروض\b|\bعروض\b.*\bمضمون\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "بوربوينت" و"واجبات" في نفس الجملة
-    if re.search(r'\ببوربوينت\b.*\بواجبات\b|\بواجبات\b.*\ببوربوينت\b', normalized_text):
+    if re.search(r'\bبوربوينت\b.*\bواجبات\b|\bواجبات\b.*\bبوربوينت\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "باوربوينت" و"واجبات" في نفس الجملة
-    if re.search(r'\بباوربوينت\b.*\بواجبات\b|\بواجبات\b.*\بباوربوينت\b', normalized_text):
+    if re.search(r'\bباوربوينت\b.*\bواجبات\b|\bواجبات\b.*\bباوربوينت\b', normalized_text):
         return True
     
     # التحقق من وجود كلمات "بوربوينت" و"مشاريع" في نفس الجملة
-    if re.search(r'\ببوربوينت\b.*\بمشاريع\b|\بمشاريع\b.*\ببوربوينت\b', normalized_text):
+    if re.search(r'\bبوربوينت\b.*\bمشاريع\b|\bمشاريع\b.*\bبوربوينت\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "باوربوينت" و"مشاريع" في نفس الجملة
-    if re.search(r'\بباوربوينت\b.*\بمشاريع\b|\بمشاريع\b.*\بباوربوينت\b', normalized_text):
+    if re.search(r'\bباوربوينت\b.*\bمشاريع\b|\bمشاريع\b.*\bباوربوينت\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "حل" و"خرائط مفاهيم" في نفس الجملة
-    if re.search(r'\بخرائط مفاهيم\b.*\بحل\b|\بحل\b.*\بخرائط مفاهيم\b', normalized_text):
+    if re.search(r'\bخرائط مفاهيم\b.*\bحل\b|\bحل\b.*\bخرائط مفاهيم\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "مشروع" و"تكاليف" في نفس الجملة
-    if re.search(r'\بمشروع\b.*\بتكاليف\b|\بتكاليف\b.*\بمشروع\b', normalized_text):
+    if re.search(r'\bمشروع\b.*\bتكاليف\b|\bتكاليف\b.*\bمشروع\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "يحل" و"واجبات" في نفس الجملة
-    if re.search(r'\بواجبات\b.*\بيحل\b|\بيحل\b.*\بواجبات\b', normalized_text):
+    if re.search(r'\bواجبات\b.*\bيحل\b|\bيحل\b.*\bواجبات\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "حل" و"مضمون" في نفس الجملة
-    if re.search(r'\بحل\b.*\بمضمون\b|\بمضمون\b.*\بحل\b', normalized_text):
+    if re.search(r'\bحل\b.*\bمضمون\b|\bمضمون\b.*\bحل\b', normalized_text):
         return True
 
     # التحقق من أرقام هواتف تبدأ بـ +967 أو 967
-    if re.search(r'\ب(\+?967\d{0,9})\ب', normalized_text):
+    if re.search(r'\b(\+?967\d{0,9})\b', normalized_text):
         return True
 
     # التحقق من وجود روابط، أرقام هواتف، أو إشارات
@@ -115,7 +115,7 @@ def contains_forbidden_content(text):
         return True
 
     # التحقق من وجود روابط "wa.me"
-    if re.search(r'wa\.me/\د+', normalized_text):
+    if re.search(r'wa\.me/\d+', normalized_text):
         return True
 
     return False
@@ -138,7 +138,7 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
     try:
         chat_member = await context.bot.get_chat_member(chat.id, user.id)
     except Exception as e:
-        logger.error(f"Error fetching chat member: {e}")
+        logger.error(f"Error fetching chat member: chat_id={chat.id}, user_id={user.id}, error={e}")
         return
 
     if chat_member.status in [ChatMember.ADMINISTRATOR, ChatMember.OWNER]:
@@ -151,7 +151,4 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
             await update.message.delete()
             await update.message.reply_text("تم حذف الرسالة لاحتوائها على محتوى غير مسموح به.")
         except Exception as e:
-            logger.error(f"Error deleting message: {e}")
-
-# وظيفة لإضافة معالج الرسائل
-def
+            logger.error(f"Error deleting message: chat_id={chat.id}, message_id={update.message.message_id}, error={e}")
