@@ -1,4 +1,3 @@
-# This is filter.py
 import logging
 import re
 from telegram import Update, ChatMember
@@ -24,7 +23,7 @@ FORBIDDEN_WORDS = [
     "عروض خاصة", "خدمات طلابية", "عروض ترويجية", "بحث عمل", "وظيفة شاغرة", "فرصة عمل", "إعلانات توظيف",
     "تقديم طلب", "استفسار عن", "معلومات حول", "بدون إذن",
     "اسقاط", "سكليف", "اجازة", "تطبيق صحتي", "كرت تشغيل",
-    "خطابه", "الخطــابه", "whatsapp.com", "+967", "967", "قروض بن التنمية" ,"بنك التنمية" ,"سنرد" ,"وسنرد",
+    "خطابه", "الخطــابه" ,"whatsapp.com" ,"+967" ,"967" ,"قروض بن التنمية", "بنك التنمية", "سنرد", "وسنرد"
 ]
 
 def normalize_arabic_text(text):
@@ -68,31 +67,31 @@ def contains_forbidden_content(text):
         return True
         
     # التحقق من وجود كلمات "عروض" و"مضمون" في نفس الجملة
-    if re.search(r'\bعروض\b.*\bمضمون\b|\bمضمون\b.*\bعروض\b', normalized_text):
+    if re.search(r'\بمضمون\b.*\بعروض\b|\بعروض\b.*\بمضمون\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "بوربوينت" و"واجبات" في نفس الجملة
-    if re.search(r'\bبوربوينت\b.*\bواجبات\b|\bواجبات\b.*\bبوربوينت\b', normalized_text):
+    if re.search(r'\ببوربوينت\b.*\بواجبات\b|\بواجبات\b.*\ببوربوينت\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "باوربوينت" و"واجبات" في نفس الجملة
-    if re.search(r'\bباوربوينت\b.*\bواجبات\b|\bواجبات\b.*\bباوربوينت\b', normalized_text):
+    if re.search(r'\بباوربوينت\b.*\بواجبات\b|\بواجبات\b.*\بباوربوينت\b', normalized_text):
         return True
     
     # التحقق من وجود كلمات "بوربوينت" و"مشاريع" في نفس الجملة
-    if re.search(r'\bبوربوينت\b.*\bمشاريع\b|\bمشاريع\b.*\bبوربوينت\b', normalized_text):
+    if re.search(r'\ببوربوينت\b.*\بمشاريع\b|\بمشاريع\b.*\ببوربوينت\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "باوربوينت" و"مشاريع" في نفس الجملة
-    if re.search(r'\bباوربوينت\b.*\بمشاريع\b|\بمشاريع\b.*\ببوربوينت\b', normalized_text):
+    if re.search(r'\بباوربوينت\b.*\بمشاريع\b|\بمشاريع\b.*\بباوربوينت\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "حل" و"خرائط مفاهيم" في نفس الجملة
-    if re.search(r'\بحل\b.*\بخرائط مفاهيم\b|\بخرائط مفاهيم\b.*\بحل\b', normalized_text):
+    if re.search(r'\بخرائط مفاهيم\b.*\بحل\b|\بحل\b.*\بخرائط مفاهيم\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "مشروع" و"تكاليف" في نفس الجملة
-    if re.search(r'\بمشروع\b.*\بتكاليف\b|\بمشروع\b.*\بتكاليف\b', normalized_text):
+    if re.search(r'\بمشروع\b.*\بتكاليف\b|\بتكاليف\b.*\بمشروع\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "يحل" و"واجبات" في نفس الجملة
@@ -110,8 +109,6 @@ def contains_forbidden_content(text):
     # التحقق من وجود روابط، أرقام هواتف، أو إشارات
     if re.search(r'http[s]?://|www\.', normalized_text):  # التحقق من وجود روابط
         return True
-    # if re.search(r'\+?\d{9,}', normalized_text):  # التحقق من وجود أرقام هواتف
-    #     return True
     if 't.me/' in normalized_text:  # التحقق من روابط تليجرام
         return True
     if re.search(r'@\w+', normalized_text):  # التحقق من وجود إشارات
@@ -126,6 +123,11 @@ def contains_forbidden_content(text):
 async def filter_messages(update: Update, context: CallbackContext) -> None:
     user = update.message.from_user
     chat = update.message.chat
+
+    # تحقق مما إذا كانت المحادثة خاصة
+    if chat.type == 'private':
+        # تجاهل الرسائل في المحادثات الخاصة
+        return
 
     # تحقق مما إذا كانت الرسالة قد أُرسلت باسم المجموعة أو القناة
     if chat.type in ['group', 'supergroup', 'channel']:
@@ -152,5 +154,4 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
             logger.error(f"Error deleting message: {e}")
 
 # وظيفة لإضافة معالج الرسائل
-def add_filters(application):
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, filter_messages))
+def
