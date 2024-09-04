@@ -1,7 +1,7 @@
 import logging
 import re
 from telegram import Update, ChatMember
-from telegram.ext import CallbackContext
+from telegram.ext import CallbackContext, MessageHandler, filters
 
 # إعدادات تسجيل الأحداث
 logging.basicConfig(
@@ -67,7 +67,7 @@ def contains_forbidden_content(text):
         return True
         
     # التحقق من وجود كلمات "عروض" و"مضمون" في نفس الجملة
-    if re.search(r'\bمضمون\b.*\bعروض\b|\bعروض\b.*\bمضمون\b', normalized_text):
+    if re.search(r'\bعروض\b.*\bمضمون\b|\bمضمون\b.*\bعروض\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "بوربوينت" و"واجبات" في نفس الجملة
@@ -75,47 +75,49 @@ def contains_forbidden_content(text):
         return True
 
     # التحقق من وجود كلمات "باوربوينت" و"واجبات" في نفس الجملة
-    if re.search(r'\bباوربوينت\b.*\bواجبات\b|\bواجبات\b.*\bباوربوينت\b', normalized_text):
+    if re.search(r'\bباوربوينت\b.*\بواجبات\b|\بواجبات\b.*\ببوربوينت\b', normalized_text):
         return True
     
     # التحقق من وجود كلمات "بوربوينت" و"مشاريع" في نفس الجملة
-    if re.search(r'\bبوربوينت\b.*\bمشاريع\b|\bمشاريع\b.*\bبوربوينت\b', normalized_text):
+    if re.search(r'\ببوربوينت\b.*\بمشاريع\b|\بمشاريع\b.*\ببوربوينت\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "باوربوينت" و"مشاريع" في نفس الجملة
-    if re.search(r'\bباوربوينت\b.*\bمشاريع\b|\bمشاريع\b.*\bباوربوينت\b', normalized_text):
+    if re.search(r'\بباوربوينت\b.*\بمشاريع\b|\بمشاريع\b.*\ببوربوينت\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "حل" و"خرائط مفاهيم" في نفس الجملة
-    if re.search(r'\bخرائط مفاهيم\b.*\bحل\b|\bحل\b.*\bخرائط مفاهيم\b', normalized_text):
+    if re.search(r'\بحل\b.*\بخرائط مفاهيم\b|\بخرائط مفاهيم\b.*\بحل\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "مشروع" و"تكاليف" في نفس الجملة
-    if re.search(r'\bمشروع\b.*\bتكاليف\b|\bتكاليف\b.*\bمشروع\b', normalized_text):
+    if re.search(r'\بمشروع\b.*\بتكاليف\b|\بمشروع\b.*\بتكاليف\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "يحل" و"واجبات" في نفس الجملة
-    if re.search(r'\bواجبات\b.*\bيحل\b|\bيحل\b.*\bواجبات\b', normalized_text):
+    if re.search(r'\بواجبات\b.*\بيحل\b|\بيحل\b.*\بواجبات\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "حل" و"مضمون" في نفس الجملة
-    if re.search(r'\bحل\b.*\bمضمون\b|\bمضمون\b.*\bحل\b', normalized_text):
+    if re.search(r'\بحل\b.*\بمضمون\b|\بمضمون\b.*\بحل\b', normalized_text):
         return True
 
     # التحقق من أرقام هواتف تبدأ بـ +967 أو 967
-    if re.search(r'\b(\+?967\d{0,9})\b', normalized_text):
+    if re.search(r'\ب(\+?967\d{0,9})\ب', normalized_text):
         return True
 
     # التحقق من وجود روابط، أرقام هواتف، أو إشارات
     if re.search(r'http[s]?://|www\.', normalized_text):  # التحقق من وجود روابط
         return True
+    # if re.search(r'\+?\d{9,}', normalized_text):  # التحقق من وجود أرقام هواتف
+    #     return True
     if 't.me/' in normalized_text:  # التحقق من روابط تليجرام
         return True
     if re.search(r'@\w+', normalized_text):  # التحقق من وجود إشارات
         return True
 
     # التحقق من وجود روابط "wa.me"
-    if re.search(r'wa\.me/\d+', normalized_text):
+    if re.search(r'wa\.me/\د+', normalized_text):
         return True
 
     return False
@@ -123,11 +125,6 @@ def contains_forbidden_content(text):
 async def filter_messages(update: Update, context: CallbackContext) -> None:
     user = update.message.from_user
     chat = update.message.chat
-
-    # تحقق مما إذا كانت المحادثة خاصة
-    if chat.type == 'private':
-        # تجاهل الرسائل في المحادثات الخاصة
-        return
 
     # تحقق مما إذا كانت الرسالة قد أُرسلت باسم المجموعة أو القناة
     if chat.type in ['group', 'supergroup', 'channel']:
@@ -138,7 +135,7 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
     try:
         chat_member = await context.bot.get_chat_member(chat.id, user.id)
     except Exception as e:
-        logger.error(f"Error fetching chat member: chat_id={chat.id}, user_id={user.id}, error={e}")
+        logger.error(f"Error fetching chat member: {e}")
         return
 
     if chat_member.status in [ChatMember.ADMINISTRATOR, ChatMember.OWNER]:
@@ -151,4 +148,8 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
             await update.message.delete()
             await update.message.reply_text("تم حذف الرسالة لاحتوائها على محتوى غير مسموح به.")
         except Exception as e:
-            logger.error(f"Error deleting message: chat_id={chat.id}, message_id={update.message.message_id}, error={e}")
+            logger.error(f"Error deleting message: {e}")
+
+# وظيفة لإضافة معالج الرسائل
+def add_filters(application):
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, filter_messages))
