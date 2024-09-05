@@ -23,12 +23,13 @@ FORBIDDEN_WORDS = [
     "عروض خاصة", "خدمات طلابية", "عروض ترويجية", "بحث عمل", "وظيفة شاغرة", "فرصة عمل", "إعلانات توظيف",
     "تقديم طلب", "استفسار عن", "معلومات حول", "بدون إذن",
     "اسقاط", "سكليف", "اجازة", "تطبيق صحتي", "كرت تشغيل",
-    "خطابه", "الخطــابه", "whatsapp.com", "+967", "967", "قروض بن التنمية" ,"بنك التنمية" ,"سنرد" ,"وسنرد"
+    "خطابه", "الخطــابه", "whatsapp.com", "+967", "967", "قروض بن التنمية", "بنك التنمية", "سنرد", "وسنرد"
 ]
+
 
 def normalize_arabic_text(text):
     # الخطوة 1: إزالة الأحرف غير الضرورية وتطبيع المسافات
-    text = re.sub(r'[ــ*]', '', text)  # إزالة الأحرف غير الضرورية مثل التمديد أو النجوم
+    text = re.sub(r'[ـ*]', '', text)  # إزالة الأحرف غير الضرورية مثل التمديد أو النجوم
     text = re.sub(r'\s+', ' ', text).strip()  # إزالة المسافات الزائدة
 
     # الخطوة 2: استبدال 'ة' بـ 'ه' ومعالجة تطبيع "ال"
@@ -50,6 +51,7 @@ def normalize_arabic_text(text):
 
     return text
 
+
 def contains_forbidden_content(text):
     # تطبيع النص
     normalized_text = normalize_arabic_text(text)
@@ -65,7 +67,7 @@ def contains_forbidden_content(text):
     # التحقق من وجود كلمات "تكاليف" و"برزنتيشن" في نفس الجملة
     if re.search(r'\bتكاليف\b.*\bبرزنتيشن\b|\bبرزنتيشن\b.*\bتكاليف\b', normalized_text):
         return True
-        
+
     # التحقق من وجود كلمات "عروض" و"مضمون" في نفس الجملة
     if re.search(r'\bعروض\b.*\bمضمون\b|\bمضمون\b.*\bعروض\b', normalized_text):
         return True
@@ -75,35 +77,35 @@ def contains_forbidden_content(text):
         return True
 
     # التحقق من وجود كلمات "باوربوينت" و"واجبات" في نفس الجملة
-    if re.search(r'\bباوربوينت\b.*\بواجبات\b|\بواجبات\b.*\ببوربوينت\b', normalized_text):
+    if re.search(r'\bباوربوينت\b.*بواجبات\b|بواجبات\b.*ببوربوينت\b', normalized_text):
         return True
-    
+
     # التحقق من وجود كلمات "بوربوينت" و"مشاريع" في نفس الجملة
-    if re.search(r'\ببوربوينت\b.*\بمشاريع\b|\بمشاريع\b.*\ببوربوينت\b', normalized_text):
+    if re.search(r'ببوربوينت\b.*بمشاريع\b|بمشاريع\b.*ببوربوينت\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "باوربوينت" و"مشاريع" في نفس الجملة
-    if re.search(r'\بباوربوينت\b.*\بمشاريع\b|\بمشاريع\b.*\ببوربوينت\b', normalized_text):
+    if re.search(r'بباوربوينت\b.*بمشاريع\b|بمشاريع\b.*ببوربوينت\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "حل" و"خرائط مفاهيم" في نفس الجملة
-    if re.search(r'\بحل\b.*\بخرائط مفاهيم\b|\بخرائط مفاهيم\b.*\بحل\b', normalized_text):
+    if re.search(r'بحل\b.*بخرائط مفاهيم\b|بخرائط مفاهيم\b.*بحل\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "مشروع" و"تكاليف" في نفس الجملة
-    if re.search(r'\بمشروع\b.*\بتكاليف\b|\بمشروع\b.*\بتكاليف\b', normalized_text):
+    if re.search(r'بمشروع\b.*بتكاليف\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "يحل" و"واجبات" في نفس الجملة
-    if re.search(r'\بواجبات\b.*\بيحل\b|\بيحل\b.*\بواجبات\b', normalized_text):
+    if re.search(r'بواجبات\b.*بيحل\b|بيحل\b.*بواجبات\b', normalized_text):
         return True
 
     # التحقق من وجود كلمات "حل" و"مضمون" في نفس الجملة
-    if re.search(r'\بحل\b.*\بمضمون\b|\بمضمون\b.*\بحل\b', normalized_text):
+    if re.search(r'بحل\b.*بمضمون\b|بمضمون\b.*بحل\b', normalized_text):
         return True
 
     # التحقق من أرقام هواتف تبدأ بـ +967 أو 967
-    if re.search(r'\ب(\+?967\d{0,9})\ب', normalized_text):
+    if re.search(r'ب(\+?967\d{0,9})ب', normalized_text):
         return True
 
     # التحقق من وجود روابط، أرقام هواتف، أو إشارات
@@ -117,10 +119,11 @@ def contains_forbidden_content(text):
         return True
 
     # التحقق من وجود روابط "wa.me"
-    if re.search(r'wa\.me/\د+', normalized_text):
+    if re.search(r'wa\.me/د+', normalized_text):
         return True
 
     return False
+
 
 async def filter_messages(update: Update, context: CallbackContext) -> None:
     user = update.message.from_user
@@ -149,6 +152,7 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
             await update.message.reply_text("تم حذف الرسالة لاحتوائها على محتوى غير مسموح به.")
         except Exception as e:
             logger.error(f"Error deleting message: {e}")
+
 
 # وظيفة لإضافة معالج الرسائل
 def add_filters(application):
