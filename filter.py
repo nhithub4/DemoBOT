@@ -26,7 +26,6 @@ FORBIDDEN_WORDS = [
     "خطابه", "الخطــابه", "whatsapp.com", "+967", "967", "قروض بن التنمية", "بنك التنمية", "سنرد", "وسنرد"
 ]
 
-
 def normalize_arabic_text(text):
     # الخطوة 1: إزالة الأحرف غير الضرورية وتطبيع المسافات
     text = re.sub(r'[ـ*]', '', text)  # إزالة الأحرف غير الضرورية مثل التمديد أو النجوم
@@ -51,7 +50,6 @@ def normalize_arabic_text(text):
 
     return text
 
-
 def contains_forbidden_content(text):
     # تطبيع النص
     normalized_text = normalize_arabic_text(text)
@@ -64,75 +62,45 @@ def contains_forbidden_content(text):
         if re.search(rf'\b{re.escape(word)}\b', normalized_text):
             return True
 
-    # التحقق من وجود كلمات "تكاليف" و"برزنتيشن" في نفس الجملة
-    if re.search(r'\bتكاليف\b.*\bبرزنتيشن\b|\bبرزنتيشن\b.*\bتكاليف\b', normalized_text):
-        return True
+    # التحقق من وجود كلمات معينة في نفس الجملة
+    forbidden_combinations = [
+        (r'\bتكاليف\b', r'\bبرزنتيشن\b'),
+        (r'\bعروض\b', r'\bمضمون\b'),
+        (r'\bبوربوينت\b', r'\bواجبات\b'),
+        (r'\bباوربوينت\b', r'\bواجبات\b'),
+        (r'\bبوربوينت\b', r'\bمشاريع\b'),
+        (r'\bباوربوينت\b', r'\bمشاريع\b'),
+        (r'\bحل\b', r'\bخرائط مفاهيم\b'),
+        (r'\bمشروع\b', r'\bتكاليف\b'),
+        (r'\bحل\b', r'\bمضمون\b'),
+        (r'\b967', None),  # التحقق من الأرقام المحظورة
+    ]
+    
+    for pattern1, pattern2 in forbidden_combinations:
+        if pattern2:
+            if re.search(f'{pattern1}.*{pattern2}|{pattern2}.*{pattern1}', normalized_text):
+                return True
+        else:
+            if re.search(pattern1, normalized_text):
+                return True
 
-    # التحقق من وجود كلمات "عروض" و"مضمون" في نفس الجملة
-    if re.search(r'\bعروض\b.*\bمضمون\b|\bمضمون\b.*\bعروض\b', normalized_text):
-        return True
-
-    # التحقق من وجود كلمات "بوربوينت" و"واجبات" في نفس الجملة
-    if re.search(r'\bبوربوينت\b.*\bواجبات\b|\bواجبات\b.*\bبوربوينت\b', normalized_text):
-        return True
-
-    # التحقق من وجود كلمات "باوربوينت" و"واجبات" في نفس الجملة
-    if re.search(r'\bباوربوينت\b.*بواجبات\b|بواجبات\b.*ببوربوينت\b', normalized_text):
-        return True
-
-    # التحقق من وجود كلمات "بوربوينت" و"مشاريع" في نفس الجملة
-    if re.search(r'ببوربوينت\b.*بمشاريع\b|بمشاريع\b.*ببوربوينت\b', normalized_text):
-        return True
-
-    # التحقق من وجود كلمات "باوربوينت" و"مشاريع" في نفس الجملة
-    if re.search(r'بباوربوينت\b.*بمشاريع\b|بمشاريع\b.*ببوربوينت\b', normalized_text):
-        return True
-
-    # التحقق من وجود كلمات "حل" و"خرائط مفاهيم" في نفس الجملة
-    if re.search(r'بحل\b.*بخرائط مفاهيم\b|بخرائط مفاهيم\b.*بحل\b', normalized_text):
-        return True
-
-    # التحقق من وجود كلمات "مشروع" و"تكاليف" في نفس الجملة
-    if re.search(r'بمشروع\b.*بتكاليف\b', normalized_text):
-        return True
-
-    # التحقق من وجود كلمات "يحل" و"واجبات" في نفس الجملة
-    if re.search(r'بواجبات\b.*بيحل\b|بيحل\b.*بواجبات\b', normalized_text):
-        return True
-
-    # التحقق من وجود كلمات "حل" و"مضمون" في نفس الجملة
-    if re.search(r'بحل\b.*بمضمون\b|بمضمون\b.*بحل\b', normalized_text):
-        return True
-
-    # التحقق من أرقام هواتف تبدأ بـ +967 أو 967
-    if re.search(r'ب(\+?967\d{0,9})ب', normalized_text):
-        return True
-
-    # التحقق من وجود روابط، أرقام هواتف، أو إشارات
-    if re.search(r'http[s]?://|www\.', normalized_text):  # التحقق من وجود روابط
-        return True
-    # if re.search(r'\+?\d{9,}', normalized_text):  # التحقق من وجود أرقام هواتف
-    #     return True
-    if 't.me/' in normalized_text:  # التحقق من روابط تليجرام
-        return True
-    if re.search(r'@\w+', normalized_text):  # التحقق من وجود إشارات
-        return True
-
-    # التحقق من وجود روابط "wa.me"
-    if re.search(r'wa\.me/د+', normalized_text):
+    # التحقق من وجود روابط أو إشارات أو أرقام هواتف
+    if re.search(r'http[s]?://|www\.|t\.me/|@\w+|wa\.me/\d+', normalized_text):
         return True
 
     return False
-
 
 async def filter_messages(update: Update, context: CallbackContext) -> None:
     user = update.message.from_user
     chat = update.message.chat
 
-    # تحقق مما إذا كانت الرسالة قد أُرسلت باسم المجموعة أو القناة
-    if chat.type in ['group', 'supergroup', 'channel']:
-        if user.is_bot:  # تحقق مما إذا كان المرسل هو بوت
-            return
+    # تحقق مما إذا كانت الرسالة قد أُرسلت في مجموعة فقط
+    if chat.type not in ['group', 'supergroup']:
+        return
+
+    # تحقق مما إذا كان المرسل هو بوت
+    if user.is_bot:
+        return
 
     # الحصول على حالة العضو في الدردشة
     try:
@@ -141,10 +109,11 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
         logger.error(f"Error fetching chat member: {e}")
         return
 
+    # تجاهل الرسائل من المسؤولين والمالكين
     if chat_member.status in [ChatMember.ADMINISTRATOR, ChatMember.OWNER]:
-        # المستخدم هو مسؤول أو مالك، يسمح بالرسالة
         return
 
+    # التحقق من وجود محتوى محظور
     message_text = update.message.text
     if contains_forbidden_content(message_text):
         try:
@@ -152,7 +121,6 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
             await update.message.reply_text("تم حذف الرسالة لاحتوائها على محتوى غير مسموح به.")
         except Exception as e:
             logger.error(f"Error deleting message: {e}")
-
 
 # وظيفة لإضافة معالج الرسائل
 def add_filters(application):
