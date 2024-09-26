@@ -102,7 +102,7 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
 
     # التحقق مما إذا كان اليوزر المسموح به موجودًا في الرسالة
     if ALLOWED_USERNAME in message_text:
-        return
+        return  # السماح للرسالة إذا كانت تحتوي على اليوزر المسموح به
 
     if contains_forbidden_content(message_text):
         try:
