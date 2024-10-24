@@ -19,30 +19,38 @@ FORBIDDEN_WORDS = [
     "إعلانات تجارية", "تواصل مباشر", "طلب عروض", "وظائف شاغرة", "توظيف", "تسويق",
     "مبيعات", "استفسار", "حجز", "معلومات حول", "إعلان", "إعلانات", "عرض ترويجي",
     "اتصال", "للاستفسار", "تواصل معنا", "فرص عمل", "مقابلات", "سيرة ذاتية",
-    "رعاية", "تأمين", "مؤسسة", "أعمال", "مشاريع", "اتصال بنا", "إعلانات الشركات",
+    "رعاية", "تأمين", "مؤسسة", "مشاريع", "اتصال بنا", "إعلانات الشركات",
     "عروض خاصة", "خدمات طلابية", "عروض ترويجية", "بحث عمل", "وظيفة شاغرة", "فرصة عمل", "إعلانات توظيف",
     "تقديم طلب", "استفسار عن", "معلومات حول", "بدون إذن",
     "اسقاط", "سكليف", "اجازة", "تطبيق صحتي", "كرت تشغيل",
-    "خطابه", "الخطــابه", "whatsapp.com", "+967", "967", "قروض بن التنمية", "بنك التنمية", "سنرد", "وسنرد"
+    "خطابه", "الخطــابه", "whatsapp.com", "+967", "967", "قروض بن التنمية", "بنك التنمية", "سنرد", "وسنرد",
+    "عذر طبي معتمد", "فحص طبي", "عذر طبي ورقي", "تقرير طبي ورقي", 
+    "شهادات صحية", "طاقم التدريس", "ذوو خبرة", 
+    "التواصل واتساب", "يتوفر لدينا", "شهادة صحية", "مختوم pdf"
 ]
 
 # المستخدم المسموح به
 ALLOWED_USERNAME = '@Raghdah1'
 
+def remove_tashkeel(text):
+    return re.sub(r'[\u0610-\u061A\u064B-\u0652]', '', text)
+
 def normalize_arabic_text(text):
-    text = re.sub(r'[ـ*]', '', text)  # إزالة الأحرف غير الضرورية مثل التمديد أو النجوم
-    text = re.sub(r'\s+', ' ', text).strip()  # إزالة المسافات الزائدة
+    text = re.sub(r'[ـ*]', '', text)
+    text = re.sub(r'\s+', ' ', text).strip()
 
     normalization_map = {
-        'ة': 'ه',  # استبدال 'ة' بـ 'ه'
-        'ال': '',  # إزالة بادئة "ال"
+        'ة': 'ه',
+        'ال': '',
     }
     text = ''.join(normalization_map.get(char, char) for char in text)
-    text = re.sub(r'\bال', '', text)  # إزالة بادئة "ال" في بداية الكلمات
-    text = re.sub(r'(.)\1+', r'\1', text)  # تقليص الأحرف المكررة إلى حرف واحد
+    text = re.sub(r'\bال', '', text)
+    text = re.sub(r'(.)\1+', r'\1', text)
     text = re.sub(r'س+ل+ا+م+م* ع+ل+ي+ك+م*', 'السلام عليكم', text)
-    text = re.sub(r'(\d)\s+(\d)', r'\1\2', text)  # إزالة المسافات بين الأرقام
+    text = re.sub(r'(\d)\s+(\d)', r'\1\2', text)
 
+    text = remove_tashkeel(text)
+    
     return text
 
 def contains_forbidden_content(text):
@@ -52,7 +60,11 @@ def contains_forbidden_content(text):
     for word in normalized_forbidden_words:
         if re.search(rf'\b{re.escape(word)}\b', normalized_text):
             return True
+        
+    if re.search(r'(\+?20[1-9][0-9]{8,9})', normalized_text):
+        return True
 
+    # التحقق من التركيبات المحظورة
     forbidden_combinations = [
         (r'\bتكاليف\b', r'\bبرزنتيشن\b'),
         (r'\bعروض\b', r'\bمضمون\b'),
@@ -63,6 +75,10 @@ def contains_forbidden_content(text):
         (r'\bحل\b', r'\bخرائط مفاهيم\b'),
         (r'\bمشروع\b', r'\bتكاليف\b'),
         (r'\bحل\b', r'\bمضمون\b'),
+        (r'\bتكاليف\b', r'\bبرزنتيشن\b'),
+        (r'\bمشروع\b', r'\bتكاليف\b'),
+        (r'\bامتحان\b', r'\bمشروع\b'), 
+        (r'\bمشروع\b', r'\bامتحان\b'),
         (r'\b967', None),
     ]
     
@@ -100,9 +116,8 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
 
     message_text = update.message.text
 
-    # التحقق مما إذا كان اليوزر المسموح به موجودًا في الرسالة
     if ALLOWED_USERNAME in message_text:
-        return  # السماح للرسالة إذا كانت تحتوي على اليوزر المسموح به
+        return
 
     if contains_forbidden_content(message_text):
         try:
@@ -111,5 +126,17 @@ async def filter_messages(update: Update, context: CallbackContext) -> None:
         except Exception as e:
             logger.error(f"Error deleting message: {e}")
 
+async def handle_update(update: Update, context: CallbackContext) -> None:
+    if update.message is not None:
+        await filter_messages(update, context)
+    elif update.edited_message is not None:
+        edited_text = update.edited_message.text
+        if contains_forbidden_content(edited_text):
+            try:
+                await context.bot.delete_message(chat_id=update.edited_message.chat.id, message_id=update.edited_message.message_id)
+                await context.bot.send_message(chat_id=update.edited_message.chat.id, text="تم حذف الرسالة المعدلة لاحتوائها على محتوى غير مسموح به.")
+            except Exception as e:
+                logger.error(f"Error deleting edited message: {e}")
+
 def add_filters(application):
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, filter_messages))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_update))
